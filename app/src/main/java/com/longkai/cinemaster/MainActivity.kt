@@ -1,5 +1,6 @@
 package com.longkai.cinemaster
 import android.R
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,12 +41,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.longkai.cinemaster.ui.theme.CineMasterTheme
+import kotlin.jvm.java
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,7 +74,8 @@ fun Home(){
         Column(// column to stack the components
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(30.dp)// 30dp space between two components
         ) {
             // List all components in Home page
@@ -110,7 +117,7 @@ fun Welcome(){
         modifier = Modifier.fillMaxWidth()// modifier to add the padding to the content
     ) {
             // content
-        Column(modifier = Modifier.padding(horizontal = 15.dp, vertical = 25.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 15.dp, vertical = 15.dp)) {
             Text(text = "Welcome to", fontSize = 30.sp, color = Color(0xFF4B5563))
             Text(text = "CineMaster", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
             Spacer(modifier = Modifier.height(4.dp))
@@ -122,6 +129,10 @@ fun Welcome(){
 // Home page - Movies function
 @Composable
 fun Movies(){
+
+    // get current page context
+    var context = LocalContext.current
+
     Column(modifier = Modifier.padding(5.dp)) {
         // small title
         Row(
@@ -133,7 +144,10 @@ fun Movies(){
 
             // "See all"  button
             Button(
-                onClick = { },
+                onClick = {
+                    var intent = Intent(context, MovieListActivity::class.java)
+                    context.startActivity(intent)
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.Red),
                 elevation = null
             ){
@@ -216,7 +230,7 @@ fun Location(){
             .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White)// background color: white
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(15.dp)) {
             // components 1 location icon and content. Row()
             Row(
                 verticalAlignment = Alignment.CenterVertically,

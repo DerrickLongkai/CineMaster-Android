@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CineMaster</string>
+    <string name="title_activity_movie_list">MovieListActivity</string>
+    <string name="title_activity_show_time">ShowTimeActivity</string>
 </resources>
