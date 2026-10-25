@@ -1,5 +1,5 @@
 package com.longkai.cinemaster
-
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -77,7 +78,7 @@ fun MovieList(){
         Movie("Spider Man","Christopher Nolan","Matthew McConaughey","Sci-Fi","4.8","2h 49m")
     )
 
-    // current display codition
+    // current display condition
     val currentDisplayMovies = if (selectedTabIndex == 0) nowShowingMovies else comingSoonMovies
 
     // content
@@ -116,6 +117,9 @@ fun MovieList(){
 // movie display content
 @Composable
 fun MovieListItemView(movie: Movie) {
+
+    val context = LocalContext.current
+
     Column {
         Row(
             modifier = Modifier
@@ -164,7 +168,15 @@ fun MovieListItemView(movie: Movie) {
             // Purchase button
             Button(
                 // purchase action
-                onClick = {  },
+                // move to showtime activity
+                onClick = {
+                    val intent = Intent(context, ShowTimeActivity::class.java)
+
+                    // add movie title here before going to next activity
+                    intent.putExtra("MOVIE_TITLE", movie.title)
+                    context.startActivity(intent)
+
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -173,7 +185,7 @@ fun MovieListItemView(movie: Movie) {
             }
         }
 
-        // bottom grey spacer
+        // bottom gray spacer
         HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
     }
 }

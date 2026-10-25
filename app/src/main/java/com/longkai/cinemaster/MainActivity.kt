@@ -1,5 +1,4 @@
 package com.longkai.cinemaster
-import android.R
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -38,12 +37,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,9 +73,9 @@ fun Home(){
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(30.dp)// 30dp space between two components
+            verticalArrangement = Arrangement.spacedBy(15.dp)// change the space between two components
         ) {
-            // List all components in Home page
+            // Break down each component in home screen for easier maintain
             Spacer(modifier = Modifier.height(5.dp))
             Header()
             Welcome()
@@ -93,14 +90,14 @@ fun Home(){
 @Composable
 fun Header(){
     Row(
-        // modifier to add the padding to the content
+        // modifier to set the padding to the content
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 5.dp),
         horizontalArrangement = Arrangement.Start
     ) {
         Column(horizontalAlignment = Alignment.Start) {
-            // contents will be displayed
+            // header contents
             Row {
                 Text(text = "Cine", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
                 Text(text = "Master", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE50914))
@@ -114,9 +111,9 @@ fun Header(){
 fun Welcome(){
     Surface(// surface to add background color to the content
         color = Color(0xFFFFF0F3),
-        modifier = Modifier.fillMaxWidth()// modifier to add the padding to the content
+        modifier = Modifier.fillMaxWidth()// modifier to set the padding to the content
     ) {
-            // content
+            //  Welcome contents
         Column(modifier = Modifier.padding(horizontal = 15.dp, vertical = 15.dp)) {
             Text(text = "Welcome to", fontSize = 30.sp, color = Color(0xFF4B5563))
             Text(text = "CineMaster", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
@@ -129,12 +126,11 @@ fun Welcome(){
 // Home page - Movies function
 @Composable
 fun Movies(){
-
     // get current page context
     var context = LocalContext.current
 
     Column(modifier = Modifier.padding(5.dp)) {
-        // small title
+        // title
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -144,6 +140,7 @@ fun Movies(){
 
             // "See all"  button
             Button(
+                // will move to Movie list activity
                 onClick = {
                     var intent = Intent(context, MovieListActivity::class.java)
                     context.startActivity(intent)
@@ -161,7 +158,7 @@ fun Movies(){
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)// distance between each movie
         ){
-            // Movies
+            // Movies description
             MovieCard(modifier = Modifier.weight(1f), title = "Interstellar", type = "Sci-Fi", rate = "4.8")
             MovieCard(modifier = Modifier.weight(1f), title = "Dune", type = "Sci-Fi", rate = "4.5")
             MovieCard(modifier = Modifier.weight(1f), title = "The Batman", type = "Action", rate = "4.9")
