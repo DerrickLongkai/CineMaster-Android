@@ -80,6 +80,8 @@ fun MovieList(){
 
     // current display condition
     val currentDisplayMovies = if (selectedTabIndex == 0) nowShowingMovies else comingSoonMovies
+    // check which page is selected: now showing = 0, coming soon = 1
+    val isComingSoon = selectedTabIndex == 1
 
     // content
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
@@ -105,10 +107,10 @@ fun MovieList(){
             }
         }
 
-        // Movie content change
+        // Movie content change, pass the selected page boolean state
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(currentDisplayMovies) { movie ->
-                MovieListItemView(movie)
+                MovieListItemView(movie = movie, isComingSoon = isComingSoon)
             }
         }
     }
@@ -116,7 +118,7 @@ fun MovieList(){
 
 // movie display content
 @Composable
-fun MovieListItemView(movie: Movie) {
+fun MovieListItemView(movie: Movie, isComingSoon: Boolean) {
 
     val context = LocalContext.current
 
@@ -162,27 +164,39 @@ fun MovieListItemView(movie: Movie) {
                     overflow = TextOverflow.Ellipsis
                 )
             }
-
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Purchase button
-            Button(
-                // purchase action
-                // move to showtime activity
-                onClick = {
-                    val intent = Intent(context, ShowTimeActivity::class.java)
+            // check which page is selected and then distinguish content.
+            if (isComingSoon){
 
-                    // add movie title here before going to next activity
-                    intent.putExtra("MOVIE_TITLE", movie.title)
-                    context.startActivity(intent)
-
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                shape = RoundedCornerShape(16.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(text = "Purchase", fontSize = 12.sp, color = Color.White)
+                // display the coming soon movies, with a detail button
+                Button(
+                    onClick = {  },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(text = "Detail", fontSize = 12.sp, color = Color.White)
+                }
+            }else{
+                //  display the now showing movies, with a purchase button
+                Button(
+                    // purchase action
+                    // move to showtime activity
+                    onClick = {
+                        val intent = Intent(context, ShowTimeActivity::class.java)
+                        // add movie title here before going to next activity
+                        intent.putExtra("MOVIE_TITLE", movie.title)
+                        context.startActivity(intent)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(text = "Purchase", fontSize = 12.sp, color = Color.White)
+                }
             }
+
         }
 
         // bottom gray spacer
