@@ -1,6 +1,9 @@
 package com.longkai.cinemaster
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -127,7 +130,7 @@ fun Welcome(){
 @Composable
 fun Movies(){
     // get current page context
-    var context = LocalContext.current
+    val context = LocalContext.current
 
     Column(modifier = Modifier.padding(5.dp)) {
         // title
@@ -142,7 +145,7 @@ fun Movies(){
             Button(
                 // will move to Movie list activity
                 onClick = {
-                    var intent = Intent(context, MovieListActivity::class.java)
+                    val intent = Intent(context, MovieListActivity::class.java)
                     context.startActivity(intent)
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.Red),
@@ -277,9 +280,27 @@ fun Location(){
             }
             Spacer(modifier = Modifier.height(16.dp))
 
+            val context = LocalContext.current
             // get direction button
             Button(
                 onClick = {
+                    // get direction: to open google map
+                    // cinema location by passing latitude and longitude
+                    val location = "51.9146,-8.1675"
+                    val uri = Uri.parse("google.navigation:q=$location")
+
+                    // create implicit intent
+                    val mapIntent = Intent(Intent.ACTION_VIEW,uri)
+                    mapIntent.setPackage("com.google.android.apps.maps")
+
+                    // execute and handle the phone without Google map
+                    try{
+                        context.startActivity(mapIntent)
+                    }catch (e: ActivityNotFoundException){
+                        // if there is no Google map on this phone
+                        Toast.makeText(context,"Sorry, Google Map was not found", Toast.LENGTH_SHORT).show()
+                    }
+
 
                 },
                 modifier = Modifier.fillMaxWidth(),
