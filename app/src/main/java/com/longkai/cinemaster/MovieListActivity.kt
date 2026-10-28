@@ -191,7 +191,7 @@ fun MovieListItemView(movie: Movie, isComingSoon: Boolean) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
                     shape = RoundedCornerShape(16.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    contentPadding =  PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(text = "Purchase", fontSize = 12.sp, color = Color.White)
                 }
