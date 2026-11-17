@@ -1,11 +1,16 @@
 package com.longkai.cinemaster
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +56,10 @@ import com.longkai.cinemaster.ui.theme.CineMasterTheme
 import kotlin.jvm.java
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
+import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.tasks.await
+import android.Manifest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -254,9 +263,13 @@ fun Location(){
 
                 // text content
                 Column(modifier = Modifier.weight(1f)) {
+                    // display the cinema name
                     Text(text = "CineMaster Cork", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text(text = "20 Grand Parade, Cork", color = Color.Gray, fontSize = 12.sp)
-                    Text(text = "1.8 km away", color = Color.Gray, fontSize = 12.sp)
+                    // display cinema's address
+                    Text(text = "Midleton, Cork", color = Color.Gray, fontSize = 12.sp)
+                    // call the distance between users location and cinema's location
+                    val distance = rememberCinemaDistance()
+                    Text(text = distance, color = Color.Gray, fontSize = 12.sp)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -316,6 +329,75 @@ fun Location(){
             }
         }
     }
+}
+
+// function to calculate the distance between user and cinema by using a callback listener.
+@SuppressLint("MissingPermission")// make sure to get location permission before calling it
+fun calculateDistance(context: Context, onResult: (Float?) -> Unit){
+
+    // get fusedLocationProviderClient example to access users location
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    // get the last time of users location
+    fusedLocationClient.lastLocation
+        // if location obtained successfully
+        .addOnSuccessListener { userLocation: Location? ->
+            // then check if its null
+            if (userLocation != null){
+                // if not, create cinema's location
+                var cinemaLocation = Location("").apply {
+                    latitude = 51.8969
+                    longitude = -8.4746
+                }
+
+                // calculate the distance and return the number based on meters.
+                onResult(userLocation.distanceTo(cinemaLocation))
+            }
+            else{
+                onResult(null)
+            }
+        }
+        .addOnFailureListener {
+            onResult(null)
+        }
+
+}
+//
+@Composable
+fun rememberCinemaDistance(): String {
+    val context = LocalContext.current
+    var distance by remember { mutableStateOf("Distance calculating...") }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+            if (locationGranted) {
+                calculateDistance(context) { distanceInMeters ->
+                    distance = if (distanceInMeters != null) {
+                        String.format("%.1f km away", distanceInMeters / 1000f)
+                    } else {
+                        "Distance unavailable"
+                    }
+                }
+            } else {
+                distance = "Location permission denied"
+            }
+        }
+    )
+
+    // 自动触发权限请求
+    LaunchedEffect(Unit) {
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
+
+    return distance
 }
 // Home page - Bottom buttons function
 @Composable
