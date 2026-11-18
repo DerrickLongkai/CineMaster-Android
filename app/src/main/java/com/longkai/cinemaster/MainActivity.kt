@@ -333,18 +333,18 @@ fun Location(){
 
 // function to calculate the distance between user and cinema by using a callback listener.
 @SuppressLint("MissingPermission")// make sure to get location permission before calling it
-fun calculateDistance(context: Context, onResult: (Float?) -> Unit){
+fun calculateDistance(context: Context, onResult: (Float?) -> Unit){ // Unit = void
 
     // get fusedLocationProviderClient example to access users location
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    // get the last time of users location
+    // get the last time of users location then wait to reply from Google play
     fusedLocationClient.lastLocation
         // if location obtained successfully
         .addOnSuccessListener { userLocation: Location? ->
             // then check if its null
             if (userLocation != null){
                 // if not, create cinema's location
-                var cinemaLocation = Location("").apply {
+                val cinemaLocation = Location("").apply {
                     latitude = 51.9143
                     longitude = -8.1701
                 }
@@ -372,7 +372,7 @@ fun distanceReturn(): String {
     // permission launcher for dynamic location
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
-        // callback result
+        // callback process: waiting for permission to execute
         onResult = { permissions ->
 
             // check if user give the permission to access GPS
