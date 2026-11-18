@@ -268,7 +268,7 @@ fun Location(){
                     // display cinema's address
                     Text(text = "Midleton, Cork", color = Color.Gray, fontSize = 12.sp)
                     // call the distance between users location and cinema's location
-                    val distance = rememberCinemaDistance()
+                    val distance = distanceReturn()
                     Text(text = distance, color = Color.Gray, fontSize = 12.sp)
                 }
 
@@ -299,7 +299,7 @@ fun Location(){
                 onClick = {
                     // get direction: to open google map
                     // cinema location by passing latitude and longitude
-                    val location = "51.9146,-8.1675"
+                    val location = "51.9143,-8.1701"
                     val uri = Uri.parse("google.navigation:q=$location")
 
                     // create implicit intent
@@ -345,8 +345,8 @@ fun calculateDistance(context: Context, onResult: (Float?) -> Unit){
             if (userLocation != null){
                 // if not, create cinema's location
                 var cinemaLocation = Location("").apply {
-                    latitude = 51.8969
-                    longitude = -8.4746
+                    latitude = 51.9143
+                    longitude = -8.1701
                 }
 
                 // calculate the distance and return the number based on meters.
@@ -361,33 +361,43 @@ fun calculateDistance(context: Context, onResult: (Float?) -> Unit){
         }
 
 }
-//
+// remember the distance and then return String
 @Composable
-fun rememberCinemaDistance(): String {
+fun distanceReturn(): String {
+    // get current cotext
     val context = LocalContext.current
+    // store the distance value and show the message
     var distance by remember { mutableStateOf("Distance calculating...") }
 
+    // permission launcher for dynamic location
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
+        // callback result
         onResult = { permissions ->
+
+            // check if user give the permission to access GPS
             val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                     permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
             if (locationGranted) {
+                // location granted then calculating the distance
                 calculateDistance(context) { distanceInMeters ->
                     distance = if (distanceInMeters != null) {
+                        // convert to km and keep 1 decimal
                         String.format("%.1f km away", distanceInMeters / 1000f)
                     } else {
+                        // distance failed to access
                         "Distance unavailable"
                     }
                 }
             } else {
+                // user refused to access GPS
                 distance = "Location permission denied"
             }
         }
     )
 
-    // 自动触发权限请求
+    // first time load the page will automatically request location permit.
     LaunchedEffect(Unit) {
         permissionLauncher.launch(
             arrayOf(
@@ -397,6 +407,7 @@ fun rememberCinemaDistance(): String {
         )
     }
 
+    // return result
     return distance
 }
 // Home page - Bottom buttons function
