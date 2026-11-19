@@ -1,5 +1,6 @@
 package com.longkai.cinemaster
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -35,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,7 +45,6 @@ import com.longkai.cinemaster.ui.theme.CineMasterTheme
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-
 
 class ShowTimeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +59,7 @@ class ShowTimeActivity : ComponentActivity() {
         }
     }
 }
+
 // object-oriented structure for showtime
 data class Showtime(
     val time: String,
@@ -69,59 +71,9 @@ data class Showtime(
 
 // show time screen
 @Composable
-fun ShowtimeScreen(movieTitle: String){
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ){
-        // break down contents in the showtime activity
-        TopBar(movieTitle)
-        DateTabs()
-        ShowtimeList()
-    }
-}
-
-// top bar: return button, a movie name from last activity
-@Composable
-fun TopBar(movieTitle: String){
-
-    val activity = LocalActivity.current
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ){
-        // left return icon
-        Icon(
-            imageVector = Icons.Filled.ArrowBack,
-            contentDescription = "Back",
-            modifier = Modifier.clickable{ activity?.finish()}
-        )
-
-        // movie name
-        Text(
-            text = movieTitle,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center
-        )
-
-        // right space placeholder
-        Spacer(modifier = Modifier.width(24.dp))
-    }
-}
-
-// Date tabs
-@Composable
-fun DateTabs(){
-    // current selected date
+fun ShowtimeScreen(movieTitle: String) {
+    // put the date list and the currently selected item here for easy passing to ShowtimeList
     var selectedDateIndex by remember { mutableStateOf(0) }
-
-    // list next four days date
     val dates = remember {
         val calendar = Calendar.getInstance()
         val formatter = SimpleDateFormat("MMM d", Locale.ENGLISH)
@@ -136,6 +88,60 @@ fun DateTabs(){
         }
     }
 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        TopBar(movieTitle)
+        DateTabs(
+            dates = dates,
+            selectedDateIndex = selectedDateIndex,
+            onDateSelected = { selectedDateIndex = it }
+        )
+        ShowtimeList(
+            movieTitle = movieTitle,
+            selectedDate = dates[selectedDateIndex]
+        )
+    }
+}
+
+// top bar: return button, a movie name from last activity
+@Composable
+fun TopBar(movieTitle: String) {
+    val activity = LocalActivity.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.ArrowBack,
+            contentDescription = "Back",
+            modifier = Modifier.clickable { activity?.finish() }
+        )
+
+        Text(
+            text = movieTitle,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.width(24.dp))
+    }
+}
+
+// Date tabs
+@Composable
+fun DateTabs(
+    dates: List<String>,
+    selectedDateIndex: Int,
+    onDateSelected: (Int) -> Unit
+) {
     ScrollableTabRow(
         selectedTabIndex = selectedDateIndex,
         containerColor = Color.White,
@@ -145,7 +151,7 @@ fun DateTabs(){
         dates.forEachIndexed { index, dateText ->
             Tab(
                 selected = selectedDateIndex == index,
-                onClick = { selectedDateIndex = index },
+                onClick = { onDateSelected(index) },
                 text = {
                     Text(
                         text = dateText,
@@ -158,11 +164,9 @@ fun DateTabs(){
     }
 }
 
-// 6. ShowtimeList
+// ShowtimeList
 @Composable
-fun ShowtimeList() {
-
-    // list all the showtime
+fun ShowtimeList(movieTitle: String, selectedDate: String) {
     val showtime = listOf(
         Showtime("10:00", "Ends 12:49", "English 2D", "Hall 1", "€15.00"),
         Showtime("13:30", "Ends 16:19", "English IMAX", "IMAX Hall", "€22.00"),
@@ -173,14 +177,24 @@ fun ShowtimeList() {
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(showtime) { showtime ->
-            ShowtimeItem(showtime)
+            ShowtimeItem(
+                showtime = showtime,
+                movieTitle = movieTitle,
+                selectedDate = selectedDate
+            )
         }
     }
 }
 
-// 7. ShowtimeItem: showtime content
+// ShowtimeItem: showtime content
 @Composable
-fun ShowtimeItem(showtime: Showtime) {
+fun ShowtimeItem(
+    showtime: Showtime,
+    movieTitle: String,
+    selectedDate: String
+) {
+    val context = LocalContext.current
+
     Column {
         Row(
             modifier = Modifier
@@ -209,8 +223,23 @@ fun ShowtimeItem(showtime: Showtime) {
                     fontSize = 16.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
+
                 Button(
-                    onClick = { /* */ },
+                    onClick = {
+                        // remove "Ends " become "10:00 - 12:49"
+                        val cleanEndTime = showtime.endTime.removePrefix("Ends ")
+                        // convert "€" String to a double value
+                        val numericPrice = showtime.price.removePrefix("€").toDoubleOrNull() ?: 0.0
+
+                        val intent = Intent(context, SeatSelectionActivity::class.java).apply {
+                            putExtra("MOVIE_TITLE", movieTitle)
+                            putExtra("SHOW_DATE", selectedDate)
+                            putExtra("SHOW_TIME", "${showtime.time} - $cleanEndTime")
+                            putExtra("HALL_NAME", showtime.hall)
+                            putExtra("TICKET_PRICE", numericPrice)
+                        }
+                        context.startActivity(intent)
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFCE4EC),
                         contentColor = Color(0xFFE91E63)

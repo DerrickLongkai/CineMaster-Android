@@ -2,4 +2,5 @@
     <string name="app_name">CineMaster</string>
     <string name="title_activity_movie_list">MovieListActivity</string>
     <string name="title_activity_show_time">ShowTimeActivity</string>
+    <string name="title_activity_seat_selection">SeatSelectionActivity</string>
 </resources>
