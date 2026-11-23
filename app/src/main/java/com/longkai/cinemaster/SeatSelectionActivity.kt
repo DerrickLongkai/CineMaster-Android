@@ -1,5 +1,6 @@
 package com.longkai.cinemaster
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -30,7 +31,7 @@ class SeatSelectionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // accept data from showtime activity
+        // accept data passed from showtime activity
         val movieTitle = intent.getStringExtra("MOVIE_TITLE") ?: "Movie Details"
         val showDate = intent.getStringExtra("SHOW_DATE") ?: ""
         val showTime = intent.getStringExtra("SHOW_TIME") ?: ""
@@ -41,7 +42,9 @@ class SeatSelectionActivity : ComponentActivity() {
             CineMasterTheme {
                 SeatSelectionScreen(
                     movieTitle = movieTitle,
-                    showtimeInfo = "Showtime: $showDate | $showTime | $hallName",
+                    showDate = showDate,
+                    showTime = showTime,
+                    hallName = hallName,
                     ticketPrice = ticketPrice
                 )
             }
@@ -49,9 +52,10 @@ class SeatSelectionActivity : ComponentActivity() {
     }
 }
 
-// Seat data model and seat status enum
+// Seat data model and seat status enum: available, sold, selected
 enum class SeatStatus { AVAILABLE, SOLD, SELECTED }
 
+// seat data model
 data class Seat(
     val row: Int,
     val col: Int,
@@ -64,17 +68,22 @@ data class Seat(
 @Composable
 fun SeatSelectionScreen(
     movieTitle: String,
-    showtimeInfo: String,
+    showDate: String,
+    showTime: String,
+    hallName: String,
     ticketPrice: Double
 ) {
     val context = LocalContext.current
     val pinkColor = Color(0xFFE91E63)
     val bgColor = Color(0xFFF8F9FA)
 
-    // simulate sold seats
-    val soldSeatKeys = setOf("1-3", "2-3", "2-4", "2-5", "2-8", "3-2", "3-6", "6-6", "6-7", "7-5", "7-7", "8-7")
+    val showtimeInfo = "Showtime: $showDate | $showTime | $hallName"
+    val showtimeKey = "$movieTitle|$showDate|$showTime|$hallName"
 
-    //  mutableStateListOf manage seats status
+    // read sold seats from seat booking manager activity
+    val soldSeatKeys = remember(showtimeKey) { SeatBookingManager.getSoldSeats(showtimeKey) }
+
+    // mutableStateListOf manage seats status
     val seats = remember {
         mutableStateListOf<Seat>().apply {
             for (row in 1..8) {
@@ -156,7 +165,7 @@ fun SeatSelectionScreen(
             Text(text = "SCREEN", fontSize = 11.sp, color = Color.Gray)
         }
 
-        // 2. use LazyVerticalGrid display seat
+        // use LazyVerticalGrid display seat layout
         LazyVerticalGrid(
             columns = GridCells.Fixed(9),
             modifier = Modifier
@@ -168,7 +177,6 @@ fun SeatSelectionScreen(
         ) {
             itemsIndexed(seats) { index, seat ->
                 if (seat.isAisle) {
-
                     Spacer(modifier = Modifier.aspectRatio(1f))
                 } else {
                     SeatItem(
@@ -215,16 +223,44 @@ fun SeatSelectionScreen(
                         fontWeight = FontWeight.Bold,
                         color = pinkColor
                     )
+
                     Button(
                         onClick = {
                             if (selectedSeats.isEmpty()) {
                                 Toast.makeText(context, "Please select at least one seat", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
+                            // calling SeatBookingManager try to book
+                            val ticket = SeatBookingManager.bookSeats(
+                                showtimeKey = showtimeKey,
+                                movieTitle = movieTitle,
+                                showDate = showDate,
+                                showTime = showTime,
+                                hallName = hallName,
+                                selectedSeats = selectedSeats,
+                                unitPrice = ticketPrice
+                            )
+
+                            if (ticket != null) {
+                                // booked successfully status change to SOLD
+                                for (i in seats.indices) {
+                                    if (seats[i].status == SeatStatus.SELECTED) {
+                                        seats[i] = seats[i].copy(status = SeatStatus.SOLD)
+                                    }
+                                }
+                                Toast.makeText(context, "Booking Confirmed!", Toast.LENGTH_SHORT).show()
+                                context.startActivity(Intent(context, MyTicketsActivity::class.java))
                             } else {
-                                Toast.makeText(
-                                    context,
-                                    "Confirmed: ${selectedSeats.joinToString(", ") { it.label }}",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                                // booking failed: remind user, and update sold seats
+                                val latestSold = SeatBookingManager.getSoldSeats(showtimeKey)
+                                for (i in seats.indices) {
+                                    val key = "${seats[i].row}-${seats[i].col}"
+                                    if (!seats[i].isAisle && latestSold.contains(key)) {
+                                        seats[i] = seats[i].copy(status = SeatStatus.SOLD)
+                                    }
+                                }
+                                Toast.makeText(context, "Seat already booked by another user!", Toast.LENGTH_SHORT).show()
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = pinkColor),

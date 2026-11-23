@@ -15,6 +15,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CineMaster">
         <activity
+            android:name=".MyTicketsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_my_tickets"
+            android:theme="@style/Theme.CineMaster" />
+        <activity
+            android:name=".SeatBookingManager"
+            android:exported="false"
+            android:label="@string/title_activity_seat_booking_manager"
+            android:theme="@style/Theme.CineMaster" />
+        <activity
             android:name=".SeatSelectionActivity"
             android:exported="false"
             android:label="@string/title_activity_seat_selection"

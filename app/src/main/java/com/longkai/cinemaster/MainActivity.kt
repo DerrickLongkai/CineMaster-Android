@@ -413,6 +413,7 @@ fun distanceReturn(): String {
 // Home page - Bottom buttons function
 @Composable
 fun Bottom(){
+    val context = LocalContext.current
     Surface(
         // add a background color to the bottom buttons
         color = Color.LightGray,
@@ -439,7 +440,10 @@ fun Bottom(){
             }
             // My Ticket button
             Button(
-                onClick = { selectedTab = "My Tickets" },
+                onClick = {
+                    selectedTab = "My Tickets"
+                    val intent = Intent(context, MyTicketsActivity::class.java)
+                    context.startActivity(intent) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,// background color white
                     contentColor = Color.Black// text color black

@@ -3,4 +3,6 @@
     <string name="title_activity_movie_list">MovieListActivity</string>
     <string name="title_activity_show_time">ShowTimeActivity</string>
     <string name="title_activity_seat_selection">SeatSelectionActivity</string>
+    <string name="title_activity_seat_booking_manager">SeatBookingManager</string>
+    <string name="title_activity_my_tickets">MyTicketsActivity</string>
 </resources>
