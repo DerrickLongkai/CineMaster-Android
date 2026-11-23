@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.longkai.cinemaster.ui.theme.CineMasterTheme
 import androidx.compose.runtime.mutableStateListOf
 import java.util.UUID
+import java.util.concurrent.locks.ReentrantLock
 
 // booking data model
 data class BookingTicket(
@@ -28,11 +29,11 @@ data class BookingTicket(
 
 object SeatBookingManager {
 
-    // define shared Lock and sold seats set
-    private val lock = Any()
+    // 1. Define explicit ReentrantLock and sold seats map
+    private val lock = ReentrantLock()
     private val soldSeatsMap = mutableMapOf<String, MutableSet<String>>()
 
-    // store booked ticket
+    // store booked tickets
     val tickets = mutableStateListOf<BookingTicket>()
 
     // default booked seats
@@ -41,16 +42,19 @@ object SeatBookingManager {
         "3-6", "6-6", "6-7", "7-5", "7-7", "8-7"
     )
 
-    // thread-safe machinism  to read sold seats
+    // Thread-safe mechanism to read sold seats using ReentrantLock
     fun getSoldSeats(showtimeKey: String): Set<String> {
-        synchronized(lock) {
+        lock.lock()
+        try {
             return soldSeatsMap.getOrPut(showtimeKey) {
                 defaultSoldSeats.toMutableSet()
             }.toSet()
+        } finally {
+            lock.unlock()
         }
     }
 
-    // in 1 synchronized situation to finalize checking and updating
+    // Check and update seat status atomically under ReentrantLock
     fun bookSeats(
         showtimeKey: String,
         movieTitle: String,
@@ -60,21 +64,23 @@ object SeatBookingManager {
         selectedSeats: List<Seat>,
         unitPrice: Double
     ): BookingTicket? {
-        synchronized(lock) {
+        // 1. Acquire the lock
+        lock.lock()
+        try {
             val currentSold = soldSeatsMap.getOrPut(showtimeKey) {
                 defaultSoldSeats.toMutableSet()
             }
             val seatKeys = selectedSeats.map { "${it.row}-${it.col}" }
 
-            // check: if any seat is in currentSold, return null
+            // 2. Check seat availability: if any seat is already sold, return null
             if (seatKeys.any { currentSold.contains(it) }) {
                 return null
             }
 
-            // update: add selected seat to Sold set
+            // Booking successful: update sold seats set
             currentSold.addAll(seatKeys)
 
-            // create order document
+            // Create booking ticket
             val ticket = BookingTicket(
                 movieTitle = movieTitle,
                 showDate = showDate,
@@ -85,6 +91,9 @@ object SeatBookingManager {
             )
             tickets.add(0, ticket)
             return ticket
+        } finally {
+            // 3. Always release the lock in finally block to prevent deadlocks
+            lock.unlock()
         }
     }
 }

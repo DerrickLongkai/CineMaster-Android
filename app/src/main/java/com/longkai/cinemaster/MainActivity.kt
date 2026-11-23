@@ -112,7 +112,10 @@ fun Header(){
             // header contents
             Row {
                 Text(text = "Cine", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
-                Text(text = "Master", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE50914))
+                Text(text = "Master", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color(
+                    0xFFFFFFFF
+                )
+                )
             }
             Text(text = "MOVIES BRING US TOGETHER",fontSize = 15.sp, color = Color.Gray, letterSpacing = 1.sp)
         }
