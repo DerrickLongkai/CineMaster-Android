@@ -333,37 +333,54 @@ fun Location(){
         }
     }
 }
+// Home page - Bottom buttons function
+@Composable
+fun Bottom(){
+    val context = LocalContext.current
+    Surface(
+        // add a background color to the bottom buttons
+        color = Color.LightGray,
+        modifier = Modifier.fillMaxWidth()
+    ){
+        // variable to remember the current selected button
+        var selectedTab by remember { mutableStateOf("Home") }
 
-// function to calculate the distance between user and cinema by using a callback listener.
-@SuppressLint("MissingPermission")// make sure to get location permission before calling it
-fun calculateDistance(context: Context, onResult: (Float?) -> Unit){ // Unit = void
-
-    // get fusedLocationProviderClient example to access users location
-    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    // get the last time of users location then wait to reply from Google play
-    fusedLocationClient.lastLocation
-        // if location obtained successfully
-        .addOnSuccessListener { userLocation: Location? ->
-            // then check if its null
-            if (userLocation != null){
-                // if not, create cinema's location
-                val cinemaLocation = Location("").apply {
-                    latitude = 51.9143
-                    longitude = -8.1701
-                }
-
-                // calculate the distance and return the number based on meters.
-                onResult(userLocation.distanceTo(cinemaLocation))
+        Row(// add padding to the buttons
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            // Home button
+            Button(
+                onClick = { selectedTab = "Home" },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,// background color white
+                    contentColor = Color.Black// text color black
+                )) {
+                // content to display Home
+                Text(text = if (selectedTab == "Home") "Home   " else "Home")
             }
-            else{
-                onResult(null)
+            // My Ticket button
+            Button(
+                onClick = {
+                    selectedTab = "My Tickets"
+                    val intent = Intent(context, MyTicketsActivity::class.java)
+                    context.startActivity(intent) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,// background color white
+                    contentColor = Color.Black// text color black
+                )) {
+                // content to display My Ticket
+                Text(text = if (selectedTab == "My Tickets") "My Tickets" else "My Tickets")
             }
         }
-        .addOnFailureListener {
-            onResult(null)
-        }
 
+
+    }
 }
+
+
 // remember the distance and then return String
 @Composable
 fun distanceReturn(): String {
@@ -413,50 +430,36 @@ fun distanceReturn(): String {
     // return result
     return distance
 }
-// Home page - Bottom buttons function
-@Composable
-fun Bottom(){
-    val context = LocalContext.current
-    Surface(
-        // add a background color to the bottom buttons
-        color = Color.LightGray,
-        modifier = Modifier.fillMaxWidth()
-    ){
-        // variable to remember the current selected button
-        var selectedTab by remember { mutableStateOf("Home") }
 
-        Row(// add padding to the buttons
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(15.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // Home button
-            Button(
-                onClick = { selectedTab = "Home" },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,// background color white
-                    contentColor = Color.Black// text color black
-                )) {
-                // content to display Home
-                Text(text = if (selectedTab == "Home") "Home   " else "Home")
+// function to calculate the distance between user and cinema by using a callback listener.
+@SuppressLint("MissingPermission")// make sure to get location permission before calling it
+fun calculateDistance(context: Context, onResult: (Float?) -> Unit){ // Unit = void
+
+    // get fusedLocationProviderClient example to access users location
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    // get the last time of users location then wait to reply from Google play
+    fusedLocationClient.lastLocation
+        // if location obtained successfully
+        .addOnSuccessListener { userLocation: Location? ->
+            // then check if its null
+            if (userLocation != null){
+                // if not, create cinema's location
+                val cinemaLocation = Location("").apply {
+                    latitude = 51.9143
+                    longitude = -8.1701
+                }
+
+                // calculate the distance and return the number based on meters.
+                onResult(userLocation.distanceTo(cinemaLocation))
             }
-            // My Ticket button
-            Button(
-                onClick = {
-                    selectedTab = "My Tickets"
-                    val intent = Intent(context, MyTicketsActivity::class.java)
-                    context.startActivity(intent) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,// background color white
-                    contentColor = Color.Black// text color black
-                )) {
-                // content to display My Ticket
-                Text(text = if (selectedTab == "My Tickets") "My Tickets" else "My Tickets")
+            else{
+                onResult(null)
             }
         }
+        .addOnFailureListener {
+            onResult(null)
+        }
 
-
-    }
 }
+
 

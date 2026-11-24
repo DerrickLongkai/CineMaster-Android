@@ -40,9 +40,11 @@ class MyTicketsActivity : ComponentActivity() {
     }
 }
 
+// my ticket main page layout function
 @Composable
 fun MyTicketsScreen() {
     val activity = LocalActivity.current
+    // obtain booked ticket
     val tickets = SeatBookingManager.tickets
 
     Column(
@@ -50,7 +52,7 @@ fun MyTicketsScreen() {
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
     ) {
-        // top return
+        // top navigation bar(return)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -58,6 +60,7 @@ fun MyTicketsScreen() {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // return icon
             Icon(
                 imageVector = Icons.Filled.ArrowBack,
                 contentDescription = "Back",
@@ -73,11 +76,17 @@ fun MyTicketsScreen() {
             Spacer(modifier = Modifier.width(24.dp))
         }
 
+        // check if the ticket page is empty
+        // if it is then display: no tickets booked yet.
         if (tickets.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "No tickets booked yet.", color = Color.Gray, fontSize = 15.sp)
             }
-        } else {
+        }
+        // if not empty
+        // display all booking order
+        else {
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -92,10 +101,11 @@ fun MyTicketsScreen() {
     }
 }
 
+// order layout and components function
 @Composable
 fun TicketCard(ticket: BookingTicket) {
-    val pinkColor = Color(0xFFE91E63)
-    // control QR code
+    val pinkColor = Color(0xFFE91E63)// main color: pink
+    // control QR code window
     var showQrDialog by remember { mutableStateOf(false) }
 
     Card(
@@ -105,7 +115,7 @@ fun TicketCard(ticket: BookingTicket) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // row 1: movie name, QR code view
+            // row 1: movie name, QR code view button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -118,6 +128,7 @@ fun TicketCard(ticket: BookingTicket) {
                     color = Color.Black
                 )
 
+                // view button to display QR code
                 Button(
                     onClick = { showQrDialog = true },
                     colors = ButtonDefaults.buttonColors(
@@ -176,10 +187,12 @@ fun TicketCard(ticket: BookingTicket) {
     }
 }
 
+// QR code component
 @Composable
 fun TicketQrDialog(ticket: BookingTicket, onDismiss: () -> Unit) {
     val pinkColor = Color(0xFFE91E63)
 
+    // layout
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(20.dp),
@@ -240,7 +253,7 @@ fun TicketQrDialog(ticket: BookingTicket, onDismiss: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // seats and total
+                // seats and total price
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -292,7 +305,8 @@ fun TicketQrDialog(ticket: BookingTicket, onDismiss: () -> Unit) {
 // Draw a QR code component with three positioning angles (each ticketId generates a unique pattern)
 @Composable
 fun QrCodeGraphic(seedText: String, modifier: Modifier = Modifier) {
-    val gridCount = 21
+    val gridCount = 21 // QR code standard layout 21x21
+    // according to Hash value to generate random matrix
     val matrix = remember(seedText) {
         val random = Random(seedText.hashCode())
         Array(gridCount) { r ->

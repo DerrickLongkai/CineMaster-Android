@@ -16,17 +16,20 @@ import androidx.compose.runtime.mutableStateListOf
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 
-// booking data model
+// booking order data model
 data class BookingTicket(
+    // unique order number, random
     val ticketId: String = "TKT-${UUID.randomUUID().toString().take(6).uppercase()}",
-    val movieTitle: String,
-    val showDate: String,
-    val showTime: String,
-    val hallName: String,
-    val seats: List<String>,
-    val totalPrice: Double
+    val movieTitle: String,// movie name
+    val showDate: String,// date
+    val showTime: String,// showtime
+    val hallName: String,// hall
+    val seats: List<String>,// seats: ["A1", "A2"]
+    val totalPrice: Double// price
 )
 
+// seat booking manager
+//manage thread safe seat status and ticket purchase data
 object SeatBookingManager {
 
     // 1. Define explicit ReentrantLock and sold seats map
@@ -44,13 +47,13 @@ object SeatBookingManager {
 
     // Thread-safe mechanism to read sold seats using ReentrantLock
     fun getSoldSeats(showtimeKey: String): Set<String> {
-        lock.lock()
+        lock.lock()// start locking
         try {
             return soldSeatsMap.getOrPut(showtimeKey) {
                 defaultSoldSeats.toMutableSet()
             }.toSet()
         } finally {
-            lock.unlock()
+            lock.unlock()//release the lock
         }
     }
 
@@ -64,7 +67,7 @@ object SeatBookingManager {
         selectedSeats: List<Seat>,
         unitPrice: Double
     ): BookingTicket? {
-        // 1. Acquire the lock
+        //Acquire the lock
         lock.lock()
         try {
             val currentSold = soldSeatsMap.getOrPut(showtimeKey) {
@@ -72,7 +75,7 @@ object SeatBookingManager {
             }
             val seatKeys = selectedSeats.map { "${it.row}-${it.col}" }
 
-            // 2. Check seat availability: if any seat is already sold, return null
+            //Check seat availability: if any seat is already sold, return null
             if (seatKeys.any { currentSold.contains(it) }) {
                 return null
             }
@@ -89,10 +92,11 @@ object SeatBookingManager {
                 seats = selectedSeats.map { it.label },
                 totalPrice = selectedSeats.size * unitPrice
             )
+
             tickets.add(0, ticket)
             return ticket
         } finally {
-            // 3. Always release the lock in finally block to prevent deadlocks
+            // release the lock in finally block to prevent deadlocks
             lock.unlock()
         }
     }
