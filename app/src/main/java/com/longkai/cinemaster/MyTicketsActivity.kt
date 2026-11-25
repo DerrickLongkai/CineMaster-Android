@@ -1,10 +1,12 @@
 package com.longkai.cinemaster
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,16 +20,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
 import com.longkai.cinemaster.ui.theme.CineMasterTheme
-import kotlin.random.Random
+import java.util.EnumMap
 
 class MyTicketsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,7 +92,6 @@ fun MyTicketsScreen() {
         // if not empty
         // display all booking order
         else {
-
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -237,7 +242,6 @@ fun TicketQrDialog(ticket: BookingTicket, onDismiss: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                //
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -284,7 +288,7 @@ fun TicketQrDialog(ticket: BookingTicket, onDismiss: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // generate QR Code based on ticket ID
+                // generate real QR Code using ZXing based on ticket ID
                 QrCodeGraphic(
                     seedText = ticket.ticketId,
                     modifier = Modifier.size(160.dp)
@@ -302,63 +306,40 @@ fun TicketQrDialog(ticket: BookingTicket, onDismiss: () -> Unit) {
     }
 }
 
-// Draw a QR code component with three positioning angles (each ticketId generates a unique pattern)
+// Real QR code component using ZXing
+// to generate a scannable QR code
 @Composable
 fun QrCodeGraphic(seedText: String, modifier: Modifier = Modifier) {
-    val gridCount = 21 // QR code standard layout 21x21
-    // according to Hash value to generate random matrix
-    val matrix = remember(seedText) {
-        val random = Random(seedText.hashCode())
-        Array(gridCount) { r ->
-            BooleanArray(gridCount) { c ->
-                val isTopLeft = r < 8 && c < 8
-                val isTopRight = r < 8 && c >= gridCount - 8
-                val isBottomLeft = r >= gridCount - 8 && c < 8
-                if (isTopLeft || isTopRight || isBottomLeft) false else random.nextBoolean()
-            }
+    val qrBitmap = remember(seedText) {
+        generateQrCodeBitmap(seedText, 400, 400)
+    }
+
+    Image(
+        bitmap = qrBitmap,
+        contentDescription = "Ticket QR Code",
+        modifier = modifier
+    )
+}
+
+// Helper function to encode text into QR code ImageBitmap using ZXing
+fun generateQrCodeBitmap(content: String, width: Int, height: Int): ImageBitmap {
+    val hints = EnumMap<EncodeHintType, Any>(EncodeHintType::class.java).apply {
+        put(EncodeHintType.CHARACTER_SET, "UTF-8")
+        put(EncodeHintType.MARGIN, 1) // set margin
+    }
+
+    val bitMatrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, width, height, hints)
+    val bmpWidth = bitMatrix.width
+    val bmpHeight = bitMatrix.height
+    val pixels = IntArray(bmpWidth * bmpHeight)
+
+    for (y in 0 until bmpHeight) {
+        for (x in 0 until bmpWidth) {
+            pixels[y * bmpWidth + x] = if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
         }
     }
 
-    Canvas(modifier = modifier) {
-        val cellSize = size.width / gridCount
-
-        //
-        for (r in 0 until gridCount) {
-            for (c in 0 until gridCount) {
-                if (matrix[r][c]) {
-                    drawRect(
-                        color = Color.Black,
-                        topLeft = Offset(c * cellSize, r * cellSize),
-                        size = Size(cellSize, cellSize)
-                    )
-                }
-            }
-        }
-
-        //
-        fun drawFinderPattern(startRow: Int, startCol: Int) {
-            //
-            drawRect(
-                color = Color.Black,
-                topLeft = Offset(startCol * cellSize, startRow * cellSize),
-                size = Size(7 * cellSize, 7 * cellSize)
-            )
-            //
-            drawRect(
-                color = Color.White,
-                topLeft = Offset((startCol + 1) * cellSize, (startRow + 1) * cellSize),
-                size = Size(5 * cellSize, 5 * cellSize)
-            )
-            //
-            drawRect(
-                color = Color.Black,
-                topLeft = Offset((startCol + 2) * cellSize, (startRow + 2) * cellSize),
-                size = Size(3 * cellSize, 3 * cellSize)
-            )
-        }
-
-        drawFinderPattern(0, 0)
-        drawFinderPattern(0, gridCount - 7)
-        drawFinderPattern(gridCount - 7, 0)
-    }
+    val bitmap = Bitmap.createBitmap(bmpWidth, bmpHeight, Bitmap.Config.RGB_565)
+    bitmap.setPixels(pixels, 0, bmpWidth, 0, 0, bmpWidth, bmpHeight)
+    return bitmap.asImageBitmap()
 }
